@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SavePlate: Harvest Horizon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        'dark-bg': '#0F172A',
+                        'dark-card': '#1E293B',
+                        'harvest-green': 'rgb(74, 222, 128)', 
+                        'sunset-orange': 'rgb(251, 146, 60)', 
+                        'sky-blue': 'rgb(59, 130, 246)', 
+                        'text-light': '#E2E8F0',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0F172A; color: #E2E8F0; min-height: 100vh; }
+        .food-card { transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; }
+        .food-card:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 10px 20px rgba(74, 222, 128, 0.2); }
+        .btn-harvest { background-color: rgb(74, 222, 128); box-shadow: 0 0 15px rgba(74, 222, 128, 0.4); }
+        .btn-harvest:hover { background-color: rgb(52, 211, 107); }
+        .modal-backdrop { background-color: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px); }
+        .chat-anim { animation: fadeIn 0.3s ease-out forwards; opacity: 0; transform: translateY(10px); }
+        .pulse-anim { animation: pulse 2s infinite; }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body class="font-sans">
+    
+    <div id="app-container" class="min-h-screen"></div>
+
+    <script>
+        // --- Global State ---
+        const STATE = {
+            currentPage: 'listings', 
+            user: null, 
+            listings: [],
+            reservations: [],
+            chatMessages: [],
+            isModalOpen: false,
+            modalContent: '',
+            currentChatId: null, 
+            currentChatName: null,
+            aiAnalyzing: false // New state for AI button
+        };
+
+        // --- Local Storage Helpers ---
+        function readStorage(key, def) { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : def; } catch { return def; } }
+        function writeStorage(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+        function idGen() { return 'id_' + Math.random().toString(36).slice(2, 9); }
+        
+        // --- Data Initialization ---
+        if (!readStorage('users', null)) {
+            writeStorage('users', [
+                // Seed with points
+                { id: idGen(), username: 'Guest Buyer', role: 'buyer', points: 150 },
+                { id: idGen(), username: 'Guest Seller', role: 'seller', sellerId: 'seller_a' }
+            ]);
+        }
+        if (!readStorage('listings', null)) {
+            writeStorage('listings', [
+                { id: idGen(), foodName: 'Fresh Salad Bowl', originalPrice: 20.00, discount: '50%', expiry: 'Today', location: 'Sibu Jaya', sellerId: 'seller_a', tag: '🔥 2 left!' },
+                { id: idGen(), foodName: 'Artisan Bread Loaf', originalPrice: 15.00, discount: '60%', expiry: 'Tomorrow', location: 'Sibu Central', sellerId: 'seller_a', tag: '⏳ Ends in 2h' },
+                { id: idGen(), foodName: 'Banana Muffins', originalPrice: 12.50, discount: '40%', expiry: 'Today', location: 'Sarikei Road', sellerId: 'seller_a', tag: null }
+            ]);
+        }
+        if (!readStorage('reservations', null)) writeStorage('reservations', []);
+        if (!readStorage('chatMessages', null)) writeStorage('chatMessages', []);
+
+        // --- Utility Functions ---
+        function calculatePrice(original, discountStr) {
+            const discountRate = parseFloat(discountStr.replace('%', '')) / 100;
+            const finalPrice = original * (1 - discountRate);
+            return { original: original.toFixed(2), final: finalPrice.toFixed(2) };
+        }
+        
+        function showMessage(title, message, isError = false) {
+            STATE.modalContent = `
+                <div class="p-6 rounded-lg shadow-2xl ${isError ? 'bg-red-900 border-red-700' : 'bg-dark-card border-t-4 border-sky-blue'}">
+                    <h3 class="text-xl font-bold mb-2 ${isError ? 'text-red-300' : 'text-text-light'}">${title}</h3>
+                    <p class="text-sm text-gray-400">${message}</p>
+                    <button onclick="closeModal()" class="mt-4 px-4 py-2 bg-sky-blue text-white rounded-lg hover:bg-sky-blue/80 transition">Close</button>
+                </div>
+            `;
+            STATE.isModalOpen = true;
+            updateUI();
+        }
+        window.closeModal = () => { STATE.isModalOpen = false; updateUI(); }
+        window.handlePageChange = (page) => { STATE.currentPage = page; updateUI(); }
+        
+        // --- Authentication ---
+        window.login = () => {
+            const username = document.getElementById('username')?.value?.trim();
+            const role = document.getElementById('role')?.value;
+            if (!username) { alert('Enter name'); return; }
+
+            let users = readStorage('users', []);
+            let userRecord = users.find(u => u.username === username);
+
+            if (userRecord) {
+                if (userRecord.role !== role) {
+                    showMessage("Access Denied", `Account '${username}' exists as a ${userRecord.role}.`, true);
+                    return;
+                }
+            } else {
+                // Initialize new user with 0 points
+                const newUser = { id: idGen(), username, role, points: 0, sellerId: role === 'seller' ? 'seller_a' : undefined };
+                users.push(newUser);
+                writeStorage('users', users);
+                userRecord = newUser;
+            }
+
+            STATE.user = userRecord;
+            writeStorage('user', userRecord);
+            STATE.currentPage = STATE.user.role === 'buyer' ? 'listings' : 'seller-analytics';
+            updateUI();
+        }
+
+        window.logout = () => { 
+            localStorage.removeItem('user'); 
+            STATE.user = null;
+            STATE.currentPage = 'login';
+            updateUI();
+        }
+
+        function checkSessionAndLoad() {
+            const user = readStorage('user', null);
+            if (user) {
+                STATE.user = user;
+                STATE.currentPage = user.role === 'buyer' ? 'listings' : 'seller-analytics';
+            } else { STATE.currentPage = 'login'; }
+            
+            STATE.listings = readStorage('listings', []);
+            STATE.reservations = readStorage('reservations', []);
+            STATE.chatMessages = readStorage('chatMessages', []);
+            updateUI();
+        }
+
+        // --- Core Logic ---
+        window.reserveFood = (listingId) => {
+             const listing = STATE.listings.find(l => l.id === listingId);
+             const prices = calculatePrice(listing.originalPrice, listing.discount);
+             
+             if(!confirm(`MOCK PAYMENT\nPay RM ${prices.final}?`)) return;
+
+             const transactionId = idGen();
+             STATE.reservations.push({
+                 id: transactionId,
+                 listingId: listingId,
+                 foodName: listing.foodName,
+                 sellerId: listing.sellerId,
+                 buyerUsername: STATE.user.username,
+                 finalPrice: parseFloat(prices.final),
+                 status: 'Completed',
+                 timestamp: new Date().toISOString()
+             });
+             writeStorage('reservations', STATE.reservations);
+             STATE.listings = STATE.listings.filter(l => l.id !== listingId);
+             writeStorage('listings', STATE.listings);
+
+             // AWARD POINTS (Gamification)
+             const pointsEarned = 20;
+             STATE.user.points = (STATE.user.points || 0) + pointsEarned;
+             // Update user in storage
+             let users = readStorage('users', []);
+             const uIndex = users.findIndex(u => u.username === STATE.user.username);
+             if(uIndex !== -1) users[uIndex].points = STATE.user.points;
+             writeStorage('users', users);
+             writeStorage('user', STATE.user); // Update session
+
+             // Auto-create initial chat message
+             STATE.chatMessages.push({
+                 id: idGen(), transactionId: transactionId, user: 'System', role: 'system',
+                 text: `Transaction started. You earned ${pointsEarned} Eco-Credits! Discuss pickup here.`, timestamp: new Date().toISOString()
+             });
+             writeStorage('chatMessages', STATE.chatMessages);
+
+             showMessage("Success", `Reserved! You earned ${pointsEarned} Eco-Credits. Check Private Inbox.`, false);
+        }
+
+        window.addListing = () => {
+            const name = document.getElementById('foodName')?.value?.trim();
+            const price = parseFloat(document.getElementById('originalPrice')?.value);
+            const discount = document.getElementById('discount')?.value?.trim();
+            const expiry = document.getElementById('expiry')?.value?.trim();
+            const location = document.getElementById('location')?.value?.trim();
+            
+            if (!name || isNaN(price)) return showMessage("Error", "Check fields.", true);
+
+            STATE.listings.push({ 
+                id: idGen(), foodName: name, originalPrice: price, discount, expiry, location, 
+                sellerId: STATE.user.sellerId || 'seller_a', tag: 'New'
+            });
+            writeStorage('listings', STATE.listings);
+            showMessage("Success", "Listing Added", false);
+            STATE.currentPage = 'seller-listings';
+            updateUI();
+        }
+        
+        // --- AI SIMULATOR (Seller) ---
+        window.runAiAnalysis = () => {
+            STATE.aiAnalyzing = true;
+            updateUI();
+            
+            // Simulate 2 second delay
+            setTimeout(() => {
+                STATE.aiAnalyzing = false;
+                showMessage("SmartStock AI Report", 
+                    "<strong>Prediction:</strong> 3 items at risk of expiry.<br><br><strong>Action:</strong> AI recommends increasing discount on 'Banana Muffins' to 60% to clear stock by 5 PM.", 
+                    false);
+            }, 2000);
+        }
+
+        // --- PRIVATE BOX (INBOX) LOGIC ---
+        window.openChatPopup = (transactionId, chatTitle) => {
+            STATE.currentChatId = transactionId;
+            STATE.currentChatName = chatTitle;
+            STATE.isModalOpen = true; 
+            STATE.modalContent = renderChatWindow();
+            updateUI();
+            
+            setTimeout(() => {
+                const area = document.getElementById('chat-messages-area');
+                if(area) area.scrollTop = area.scrollHeight;
+            }, 100);
+        }
+
+        window.sendChat = () => {
+            const input = document.getElementById('chatMessage');
+            const text = input?.value?.trim();
+            if(!text || !STATE.currentChatId) return;
+            
+            STATE.chatMessages.push({
+                id: idGen(), transactionId: STATE.currentChatId, user: STATE.user.username,
+                role: STATE.user.role, text: text, timestamp: new Date().toISOString()
+            });
+            writeStorage('chatMessages', STATE.chatMessages);
+            input.value = '';
+            
+            STATE.modalContent = renderChatWindow();
+            updateUI();
+             setTimeout(() => {
+                const area = document.getElementById('chat-messages-area');
+                if(area) area.scrollTop = area.scrollHeight;
+            }, 50);
+        }
+
+        // --- Render Functions ---
+        function renderHeader() {
+            const buyerLinks = [
+                { id: 'listings', label: 'Food', icon: 'ph-cloud-arrow-down' },
+                { id: 'reservations', label: 'Transactions', icon: 'ph-receipt' },
+                { id: 'chat-inbox', label: 'Inbox', icon: 'ph-chat-circle-dots' }
+            ];
+            const sellerLinks = [
+                { id: 'seller-analytics', label: 'Analytics', icon: 'ph-chart-line' },
+                { id: 'seller-listings', label: 'Listings', icon: 'ph-list' },
+                { id: 'seller-add', label: 'Add', icon: 'ph-plus-circle' },
+                { id: 'chat-inbox', label: 'Inbox', icon: 'ph-chat-circle-dots' }
+            ];
+            const links = STATE.user.role === 'buyer' ? buyerLinks : sellerLinks;
+
+            return `
+                <header class="sticky top-0 z-20 bg-dark-bg/95 backdrop-blur-sm border-b border-dark-card py-3 px-4">
+                    <div class="flex justify-between items-center max-w-7xl mx-auto">
+                        <div class="flex items-center gap-4">
+                            <h1 class="text-2xl font-extrabold text-text-light">SavePlate<span class="text-harvest-green">.</span></h1>
+                            ${STATE.user.role === 'buyer' ? 
+                                `<div class="hidden sm:flex items-center bg-gray-800 px-3 py-1 rounded-full border border-harvest-green/30">
+                                    <i class="ph ph-plant text-harvest-green mr-2"></i>
+                                    <span class="text-sm font-bold text-harvest-green">${STATE.user.points || 0} Eco-Credits</span>
+                                </div>` : ''}
+                        </div>
+                        <nav class="flex space-x-2">
+                            ${links.map(l => `
+                                <button onclick="handlePageChange('${l.id}')" class="px-3 py-2 text-sm font-medium rounded-lg flex items-center transition ${STATE.currentPage === l.id ? 'bg-dark-card text-harvest-green border-b-2 border-harvest-green' : 'text-gray-400 hover:text-white'}">
+                                    <i class="ph ${l.icon} text-lg mr-1"></i> ${l.label}
+                                </button>
+                            `).join('')}
+                        </nav>
+                        <button onclick="logout()" class="text-xs bg-red-600/20 text-red-400 px-3 py-1 rounded hover:bg-red-600 hover:text-white transition">Log Out</button>
+                    </div>
+                </header>
+            `;
+        }
+
+        // --- The Unified Inbox Page ---
+        function renderInboxPage() {
+            let conversations = [];
+            if (STATE.user.role === 'buyer') {
+                conversations = STATE.reservations.filter(r => r.buyerUsername === STATE.user.username);
+            } else {
+                conversations = STATE.reservations.filter(r => r.sellerId === (STATE.user.sellerId || 'seller_a'));
+            }
+
+            const listHtml = conversations.map(r => {
+                const msgs = STATE.chatMessages.filter(m => m.transactionId === r.id);
+                const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1] : { text: "No messages yet.", user: "System", timestamp: r.timestamp };
+                const isUnread = lastMsg.user !== STATE.user.username && lastMsg.role !== 'system';
+                
+                return `
+                    <div onclick="openChatPopup('${r.id}', '${r.foodName} (${r.status})')" 
+                        class="bg-dark-card p-4 rounded-xl flex justify-between items-center cursor-pointer border-l-4 transition hover:bg-gray-800 ${isUnread ? 'border-sky-blue bg-gray-800' : 'border-transparent'}">
+                        
+                        <div class="flex items-center space-x-4">
+                            <div class="bg-gray-700 p-3 rounded-full text-2xl">
+                                ${STATE.user.role === 'buyer' ? '<i class="ph ph-storefront text-harvest-green"></i>' : '<i class="ph ph-user text-sky-blue"></i>'}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-text-light">${r.foodName}</h4>
+                                <p class="text-sm text-gray-400">
+                                    ${STATE.user.role === 'buyer' ? 'Seller' : r.buyerUsername}: 
+                                    <span class="${isUnread ? 'text-white font-semibold' : 'text-gray-500'}">
+                                        ${lastMsg.text.substring(0, 30)}${lastMsg.text.length > 30 ? '...' : ''}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="text-right">
+                            <p class="text-xs text-gray-500 mb-1">${new Date(lastMsg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                            ${isUnread ? '<span class="bg-sky-blue text-white text-xs px-2 py-0.5 rounded-full">New</span>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="max-w-3xl mx-auto p-8">
+                    <h2 class="text-3xl font-extrabold text-text-light mb-6 flex items-center">
+                        <i class="ph ph-chat-teardrop-text text-sky-blue mr-3"></i> Private Inbox
+                    </h2>
+                    <div class="space-y-4">
+                        ${conversations.length > 0 ? listHtml : `
+                            <div class="text-center p-10 bg-dark-card rounded-xl text-gray-500">
+                                <i class="ph ph-envelope-open text-4xl mb-3"></i>
+                                <p>No active conversations found.</p>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderChatWindow() {
+            const msgs = STATE.chatMessages.filter(m => m.transactionId === STATE.currentChatId);
+            const bubbles = msgs.map(m => {
+                const isMe = m.user === STATE.user.username;
+                const isSystem = m.role === 'system';
+                if (isSystem) return `<div class="text-center text-xs text-gray-500 my-2">-- ${m.text} --</div>`;
+                return `
+                    <div class="flex ${isMe ? 'justify-end' : 'justify-start'} mb-3 chat-anim">
+                        <div class="max-w-[80%] px-4 py-2 rounded-xl text-sm shadow-md 
+                            ${isMe ? 'bg-sky-blue text-white rounded-br-none' : 'bg-gray-700 text-gray-200 rounded-tl-none'}">
+                            ${m.text}
+                            <div class="text-[10px] opacity-70 text-right mt-1">${new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="bg-dark-card rounded-xl shadow-2xl overflow-hidden h-[500px] flex flex-col">
+                    <div class="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center">
+                        <h3 class="font-bold text-text-light">PM: ${STATE.currentChatName}</h3>
+                        <button onclick="closeModal()" class="text-gray-400 hover:text-white"><i class="ph ph-x text-xl"></i></button>
+                    </div>
+                    <div id="chat-messages-area" class="flex-grow p-4 overflow-y-auto bg-dark-bg/50">
+                        ${bubbles}
+                    </div>
+                    <div class="p-3 bg-gray-800 flex items-center space-x-2">
+                        <input id="chatMessage" type="text" placeholder="Type a message..." class="flex-grow bg-dark-bg border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-sky-blue outline-none" onkeypress="if(event.key==='Enter') sendChat()">
+                        <button onclick="sendChat()" class="bg-sky-blue hover:bg-sky-600 text-white p-2 rounded-lg transition"><i class="ph ph-paper-plane-right text-xl"></i></button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderListingsPage() {
+             return `<div class="max-w-7xl mx-auto p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                ${STATE.listings.map(l => {
+                    const prices = calculatePrice(l.originalPrice, l.discount);
+                    return `
+                    <div class="food-card bg-dark-card rounded-xl p-5 border border-gray-700 flex flex-col relative overflow-hidden">
+                        ${l.tag ? `<div class="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg z-10">${l.tag}</div>` : ''}
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-bold text-lg text-text-light">${l.foodName}</h3>
+                            <span class="bg-sunset-orange text-white text-xs px-2 py-1 rounded-full">${l.discount} OFF</span>
+                        </div>
+                        <p class="text-sm text-gray-400 mb-4"><i class="ph ph-map-pin"></i> ${l.location}</p>
+                        <div class="mt-auto flex justify-between items-center">
+                            <div><span class="text-xl font-bold text-harvest-green">RM ${prices.final}</span> <span class="text-xs line-through text-gray-500">RM ${l.originalPrice}</span></div>
+                            <button onclick="reserveFood('${l.id}')" class="px-4 py-2 bg-harvest-green text-dark-bg font-bold rounded-lg hover:bg-green-400">Buy</button>
+                        </div>
+                    </div>`
+                }).join('')}
+             </div>`;
+        }
+
+        function renderReservationsPage() {
+            const myRes = STATE.reservations.filter(r => r.buyerUsername === STATE.user.username);
+            return `<div class="max-w-4xl mx-auto p-8">
+                <h2 class="text-2xl font-bold mb-4">My Transactions</h2>
+                <div class="space-y-4">${myRes.map(r => `<div class="bg-dark-card p-4 rounded-lg flex justify-between">
+                    <div><h4 class="font-bold">${r.foodName}</h4><p class="text-sm text-gray-400">Paid: RM ${r.finalPrice}</p></div>
+                    <button onclick="openChatPopup('${r.id}', '${r.foodName}')" class="text-sky-blue text-sm hover:underline">Message Seller</button>
+                </div>`).join('')}</div>
+            </div>`;
+        }
+
+        function renderSellerAnalytics() {
+            const totalRev = STATE.reservations.reduce((a,b)=>a+b.finalPrice,0).toFixed(2);
+            return `<div class="max-w-4xl mx-auto p-8">
+                <h2 class="text-2xl font-bold mb-4">Analytics</h2>
+                <div class="grid grid-cols-3 gap-4 mb-8">
+                    <div class="bg-dark-card p-6 rounded-lg border-t-4 border-harvest-green"><p class="text-gray-400">Revenue</p><p class="text-3xl font-bold">RM ${totalRev}</p></div>
+                    <div class="bg-dark-card p-6 rounded-lg border-t-4 border-sky-blue"><p class="text-gray-400">Sold</p><p class="text-3xl font-bold">${STATE.reservations.length}</p></div>
+                    <div class="bg-dark-card p-6 rounded-lg border-t-4 border-sunset-orange"><p class="text-gray-400">Platform Fees</p><p class="text-3xl font-bold">RM ${(totalRev*0.05).toFixed(2)}</p></div>
+                </div>
+                
+                <div class="bg-dark-card p-6 rounded-xl border border-gray-700 flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-bold text-text-light flex items-center"><i class="ph ph-brain text-purple-400 mr-2"></i> SmartStock AI</h3>
+                        <p class="text-sm text-gray-400">Analyze sales patterns to predict stock expiry.</p>
+                    </div>
+                    <button onclick="runAiAnalysis()" class="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold transition flex items-center">
+                        ${STATE.aiAnalyzing ? '<i class="ph ph-spinner animate-spin mr-2"></i> Analyzing...' : '<i class="ph ph-lightning mr-2"></i> Analyze Inventory'}
+                    </button>
+                </div>
+            </div>`;
+        }
+
+        function renderSellerListings() {
+            return `<div class="max-w-4xl mx-auto p-8"><h2 class="text-2xl font-bold mb-4">Your Listings</h2>
+            <div class="space-y-3">${STATE.listings.map(l=>`<div class="bg-dark-card p-4 rounded border-l-4 border-harvest-green flex justify-between">
+                <span>${l.foodName} (${l.discount})</span> <span class="text-gray-500">${l.tag || 'Active'}</span>
+            </div>`).join('')}</div></div>`;
+        }
+
+        function renderSellerAdd() {
+            return `<div class="max-w-md mx-auto p-8"><h2 class="text-2xl font-bold mb-4">Add Listing</h2>
+            <div class="bg-dark-card p-6 rounded-lg space-y-3">
+                <input id="foodName" placeholder="Name" class="w-full bg-dark-bg border border-gray-600 p-2 rounded text-white">
+                <input id="originalPrice" type="number" placeholder="Price" class="w-full bg-dark-bg border border-gray-600 p-2 rounded text-white">
+                <input id="discount" placeholder="Discount %" class="w-full bg-dark-bg border border-gray-600 p-2 rounded text-white">
+                <input id="expiry" placeholder="Expiry" class="w-full bg-dark-bg border border-gray-600 p-2 rounded text-white">
+                <input id="location" placeholder="Location" class="w-full bg-dark-bg border border-gray-600 p-2 rounded text-white">
+                <button onclick="addListing()" class="w-full bg-harvest-green p-3 rounded font-bold text-dark-bg">Post</button>
+            </div></div>`;
+        }
+
+        function renderLogin() {
+            return `<div class="min-h-screen flex items-center justify-center"><div class="w-full max-w-sm bg-dark-card p-8 rounded-xl border-t-4 border-harvest-green">
+                <h1 class="text-3xl font-extrabold mb-6">SavePlate.</h1>
+                <input id="username" placeholder="Name" class="w-full mb-4 bg-dark-bg border border-gray-600 p-3 rounded text-white">
+                <select id="role" class="w-full mb-6 bg-dark-bg border border-gray-600 p-3 rounded text-white"><option value="buyer">Buyer</option><option value="seller">Seller</option></select>
+                <button onclick="login()" class="w-full bg-harvest-green py-3 rounded font-bold text-dark-bg">Login / Register</button>
+            </div></div>`;
+        }
+
+        function renderContent() {
+            if (STATE.currentPage === 'login') return renderLogin();
+            if (STATE.currentPage === 'listings') return renderListingsPage();
+            if (STATE.currentPage === 'reservations') return renderReservationsPage();
+            if (STATE.currentPage === 'chat-inbox') return renderInboxPage();
+            if (STATE.currentPage === 'seller-analytics') return renderSellerAnalytics();
+            if (STATE.currentPage === 'seller-listings') return renderSellerListings();
+            if (STATE.currentPage === 'seller-add') return renderSellerAdd();
+            return renderListingsPage();
+        }
+
+        function updateUI() {
+            const container = document.getElementById('app-container');
+            if (STATE.currentPage === 'login') container.innerHTML = renderLogin();
+            else container.innerHTML = renderHeader() + '<main class="pb-10">' + renderContent() + '</main>' + (STATE.isModalOpen ? renderModal() : '');
+        }
+        function renderModal() { return `<div class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4"><div class="w-full max-w-md mx-auto">${STATE.modalContent}</div></div>`; }
+
+        window.onload = checkSessionAndLoad;
+    </script>
+</body>
+</html>
