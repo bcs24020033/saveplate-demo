@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,20 +9,18 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script>
         tailwind.config = {
+            darkMode: ['class', '[data-theme="dark"]'],
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        // Semantic colors mapping to CSS variables
                         'main-bg': 'var(--bg-main)',
                         'card-bg': 'var(--bg-card)',
                         'input-bg': 'var(--bg-input)',
                         'text-main': 'var(--text-main)',
                         'text-muted': 'var(--text-muted)',
                         'border-subtle': 'var(--border-subtle)',
-                        
-                        // Brand colors
-                        'harvest-green': '#10B981', // Emerald 500
+                        'harvest-green': '#10B981', 
                         'harvest-hover': '#059669',
                         'sunset-orange': '#F97316', 
                         'sky-blue': '#3B82F6', 
@@ -36,115 +34,105 @@
         }
     </script>
     <style>
-        /* --- SAVEPLATE MIDNIGHT THEME (From Screenshot) --- */
+        /* --- THEME VARIABLES --- */
         :root {
-            /* Background: #0F172A (Deep Slate) */
-            --bg-main: #0F172A;
-            
-            /* Cards: #1E293B (Lighter Slate) */
-            --bg-card: #1E293B;
-            
-            /* Inputs: #334155 (The specific grey-blue from your screenshot) */
-            --bg-input: #334155;
-            
-            /* Text Colors */
-            --text-main: #F8FAFC;    /* Slate 50 (White-ish) */
-            --text-muted: #94A3B8;   /* Slate 400 */
-            
-            /* Borders */
+            /* DARK MODE (Midnight) */
+            --bg-main: #0F172A;      
+            --bg-card: #1E293B;      
+            --bg-input: #334155;     
+            --text-main: #F8FAFC;    
+            --text-muted: #94A3B8;   
             --border-subtle: #334155;
             
-            /* Shadows & Effects */
             --shadow-natural: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-            --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-            --header-glass: rgba(15, 23, 42, 0.85); /* Dark Glass */
+            --shadow-glass: 0 20px 40px -10px rgba(0, 0, 0, 0.6); /* Stronger shadow for dark mode depth */
+            --header-glass: rgba(15, 23, 42, 0.8);
+            --input-text: #FFFFFF;
+            
+            /* Overlay Opacity: 0.9 means 90% Blue Color, 10% Image Visible */
+            --bg-overlay-opacity: 0.90; 
         }
 
-        /* --- GLOBAL STYLES --- */
-        body { 
-            background-color: var(--bg-main); 
-            color: var(--text-main); 
-            min-height: 100vh; 
-            overflow-x: hidden;
+        /* LIGHT MODE */
+        [data-theme="light"] {
+            --bg-main: #F8FAFC;      
+            --bg-card: #FFFFFF;      
+            --bg-input: #F1F5F9;     
+            --text-main: #0F172A;    
+            --text-muted: #64748B;   
+            --border-subtle: #E2E8F0;
+
+            --shadow-natural: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-glass: 0 20px 40px -10px rgba(0, 0, 0, 0.1); /* Soft shadow for light mode */
+            --header-glass: rgba(255, 255, 255, 0.8);
+            --input-text: #0F172A;
+            
+            /* Overlay Opacity: 0.4 means 40% White Color, 60% Image Visible */
+            --bg-overlay-opacity: 0.40; 
         }
 
-        /* Smooth Transitions */
-        body, div, nav, button, input, select, h1, h2, h3, p, span, i {
-            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-        }
-
-        /* UI Components */
-        .glass-header {
-            background: var(--header-glass);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .natural-card {
-            background-color: var(--bg-card);
-            box-shadow: var(--shadow-natural);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
+        /* Essential for background to show through */
+        body { background-color: transparent; color: var(--text-main); min-height: 100vh; overflow-x: hidden; position: relative; }
         
-        /* Inputs matching your screenshot */
-        .natural-input {
-            background-color: var(--bg-input);
-            border: 1px solid transparent;
-            color: white;
-            transition: all 0.2s ease;
-        }
-        .natural-input:focus {
-            background-color: #1E293B;
-            border-color: #10B981;
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
-        }
-        .natural-input::placeholder {
-            color: #94A3B8;
+        /* Smooth Transition */
+        body, div, nav, button, input, select, h1, h2, h3, p, span, i, header, .overlay-layer { 
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease; 
         }
 
-        /* Utilities */
+        .glass-header { background: var(--header-glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-subtle); }
+        
+        .natural-card { background-color: var(--bg-card); box-shadow: var(--shadow-natural); border: 1px solid var(--border-subtle); }
+        
+        .natural-input { 
+            background-color: var(--bg-input); 
+            border: 1px solid transparent; 
+            color: var(--input-text); 
+            transition: all 0.2s ease; 
+        }
+        .natural-input:focus { 
+            background-color: var(--bg-card); 
+            border-color: #10B981; 
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); 
+            color: var(--text-main);
+        }
+        .natural-input::placeholder { color: var(--text-muted); opacity: 0.7; }
+        
         .food-card-hover:hover { transform: translateY(-4px); }
         .modal-backdrop { background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); }
         .chat-anim { animation: fadeIn 0.3s ease-out forwards; opacity: 0; transform: translateY(10px); }
         @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
         
-        .upload-zone { 
-            border: 2px dashed var(--border-subtle); 
-            background: var(--bg-input); 
-            transition: all 0.2s; 
-        }
-        .upload-zone:hover { 
-            border-color: #10B981; 
-            background-color: rgba(16, 185, 129, 0.1); 
-        }
+        .upload-zone { border: 2px dashed var(--border-subtle); background: var(--bg-input); transition: all 0.2s; }
+        .upload-zone:hover { border-color: #10B981; background-color: rgba(16, 185, 129, 0.1); }
         
-        /* Custom Scrollbar for Chat */
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-main); }
+        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--bg-input); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        .toast-enter { transform: translateX(100%); opacity: 0; }
+        .toast-enter-active { transform: translateX(0); opacity: 1; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .toast-exit-active { transform: translateX(100%); opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
 </head>
 <body class="font-sans antialiased selection:bg-harvest-green selection:text-white">
     
-    <div id="app-container" class="min-h-screen"></div>
+    <div class="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+        <img src="https://images.unsplash.com/photo-1495195134817-aeb325a55b65?q=80&w=2676&auto=format&fit=crop" 
+             class="absolute inset-0 w-full h-full object-cover">
+        
+        <div class="absolute inset-0 bg-main-bg transition-colors duration-300" style="opacity: var(--bg-overlay-opacity)"></div>
+    </div>
+
+    <div id="app-container" class="min-h-screen flex flex-col"></div>
 
     <script>
         // --- Global State ---
         const STATE = {
-            currentPage: 'listings', 
-            user: null, 
-            listings: [],
-            reservations: [],
-            chatMessages: [],
-            isModalOpen: false,
-            modalContent: '',
-            currentChatId: null, 
-            currentChatName: null,
-            aiAnalyzing: false,
-            searchQuery: '',
-            tempImage: null
+            currentPage: 'listings', user: null, listings: [], reservations: [], chatMessages: [],
+            isModalOpen: false, modalContent: '', currentChatId: null, currentChatName: null,
+            aiAnalyzing: false, searchQuery: '', tempImage: null,
+            theme: 'dark' // Default to Dark Mode (Picture 2 style)
         };
 
         // --- Local Storage Helpers ---
@@ -152,7 +140,24 @@
         function writeStorage(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
         function idGen() { return 'id_' + Math.random().toString(36).slice(2, 9); }
         
-        // --- REAL-TIME SYNC ---
+        // --- THEME LOGIC ---
+        window.initTheme = () => {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            STATE.theme = savedTheme;
+            applyTheme();
+        }
+        
+        window.toggleTheme = () => {
+            STATE.theme = STATE.theme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('theme', STATE.theme);
+            applyTheme();
+            updateUI();
+        }
+        
+        function applyTheme() {
+            document.documentElement.setAttribute('data-theme', STATE.theme);
+        }
+
         window.addEventListener('storage', (e) => {
             if(['listings', 'reservations', 'chatMessages', 'users'].includes(e.key)) {
                 STATE.listings = readStorage('listings', []);
@@ -169,21 +174,12 @@
 
         // --- Data Initialization ---
         if (!readStorage('users', null)) {
-            writeStorage('users', [
-                { id: idGen(), username: 'Guest Buyer', role: 'buyer', points: 150 },
-                { id: idGen(), username: 'Guest Seller', role: 'seller', sellerId: 'seller_a' }
-            ]);
+            writeStorage('users', [{ id: idGen(), username: 'Guest Buyer', role: 'buyer', points: 150 }, { id: idGen(), username: 'Guest Seller', role: 'seller', sellerId: 'seller_a' }]);
         }
         if (!readStorage('listings', null)) {
             writeStorage('listings', [
-                { 
-                    id: idGen(), foodName: 'Fresh Salad Bowl', originalPrice: 20.00, discount: '50%', expiry: 'Today', location: 'Sibu Jaya', sellerId: 'seller_a', tag: '🔥 2 left!',
-                    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&q=80' 
-                },
-                { 
-                    id: idGen(), foodName: 'Artisan Bread', originalPrice: 15.00, discount: '60%', expiry: 'Tomorrow', location: 'Sibu Central', sellerId: 'seller_a', tag: '⏳ Ends in 2h',
-                    image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80'
-                }
+                { id: idGen(), foodName: 'Fresh Salad Bowl', originalPrice: 20.00, discount: '50%', expiry: 'Today', location: 'Sibu Jaya', sellerId: 'seller_a', tag: '🔥 2 left!', image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&q=80' },
+                { id: idGen(), foodName: 'Artisan Bread', originalPrice: 15.00, discount: '60%', expiry: 'Tomorrow', location: 'Sibu Central', sellerId: 'seller_a', tag: '⏳ Ends in 2h', image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80' }
             ]);
         }
         if (!readStorage('reservations', null)) writeStorage('reservations', []);
@@ -207,6 +203,25 @@
             STATE.isModalOpen = true;
             updateUI();
         }
+
+        window.showToast = (message, type = 'success') => {
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                container.className = 'fixed bottom-4 right-4 z-[70] flex flex-col gap-2 pointer-events-none';
+                document.body.appendChild(container);
+            }
+            const toast = document.createElement('div');
+            const colorClass = type === 'success' ? 'border-l-harvest-green' : 'border-l-red-500';
+            const icon = type === 'success' ? 'ph-check-circle' : 'ph-warning-circle';
+            toast.className = `natural-card p-4 rounded-xl border-l-4 ${colorClass} shadow-glass flex items-center gap-3 min-w-[300px] toast-enter pointer-events-auto bg-card-bg`;
+            toast.innerHTML = `<i class="ph-fill ${icon} text-xl ${type === 'success' ? 'text-harvest-green' : 'text-red-500'}"></i><span class="text-sm font-semibold text-text-main">${message}</span>`;
+            container.appendChild(toast);
+            requestAnimationFrame(() => { toast.classList.remove('toast-enter'); toast.classList.add('toast-enter-active'); });
+            setTimeout(() => { toast.classList.remove('toast-enter-active'); toast.classList.add('toast-exit-active'); setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
         window.closeModal = () => { STATE.isModalOpen = false; updateUI(); }
         window.handlePageChange = (page) => { STATE.currentPage = page; updateUI(); }
         
@@ -252,11 +267,10 @@
         }
 
         function checkSessionAndLoad() {
+            initTheme();
             const user = readStorage('user', null);
-            if (user) {
-                STATE.user = user;
-                STATE.currentPage = user.role === 'buyer' ? 'listings' : 'seller-analytics';
-            } else { STATE.currentPage = 'login'; }
+            if (user) { STATE.user = user; STATE.currentPage = user.role === 'buyer' ? 'listings' : 'seller-analytics'; } 
+            else { STATE.currentPage = 'login'; }
             
             STATE.listings = readStorage('listings', []);
             STATE.reservations = readStorage('reservations', []);
@@ -269,7 +283,7 @@
              const listing = STATE.listings.find(l => l.id === listingId);
              const prices = calculatePrice(listing.originalPrice, listing.discount);
              
-             if(!confirm(`MOCK PAYMENT\nPay RM ${prices.final}?`)) return;
+             if(!confirm(`Pay RM ${prices.final}?`)) return;
 
              const transactionId = idGen();
              STATE.reservations.push({
@@ -290,21 +304,35 @@
                  text: `Transaction started. You earned ${pointsEarned} Eco-Credits! Discuss pickup here.`, timestamp: new Date().toISOString()
              });
              writeStorage('chatMessages', STATE.chatMessages);
-             showMessage("Success", `Reserved! You earned ${pointsEarned} Eco-Credits.`, false);
+             showToast(`Reserved! Earned ${pointsEarned} pts.`, 'success');
         }
 
         window.handleImageUpload = (input) => {
             if (input.files && input.files[0]) {
+                const file = input.files[0];
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    STATE.tempImage = e.target.result;
-                    const preview = document.getElementById('image-preview');
-                    const placeholder = document.getElementById('upload-placeholder');
-                    preview.src = e.target.result;
-                    preview.classList.remove('hidden');
-                    placeholder.classList.add('hidden');
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        const MAX_WIDTH = 800;
+                        const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        STATE.tempImage = dataUrl;
+                        const preview = document.getElementById('image-preview');
+                        const placeholder = document.getElementById('upload-placeholder');
+                        preview.src = dataUrl;
+                        preview.classList.remove('hidden');
+                        placeholder.classList.add('hidden');
+                        showToast("Photo uploaded & compressed", "success");
+                    }
+                    img.src = event.target.result;
                 }
-                reader.readAsDataURL(input.files[0]);
+                reader.readAsDataURL(file);
             }
         }
 
@@ -317,16 +345,15 @@
             
             if (!name || isNaN(price)) return showMessage("Error", "Check fields.", true);
 
-            // Use temp image or fallback
             const imgUrl = STATE.tempImage || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80';
-            
             STATE.listings.push({ 
                 id: idGen(), foodName: name, originalPrice: price, discount, expiry, location, 
                 sellerId: STATE.user.sellerId || 'seller_a', tag: 'New', image: imgUrl
             });
             writeStorage('listings', STATE.listings);
             STATE.tempImage = null; 
-            showMessage("Success", "Listing Added", false);
+            
+            showToast("Listing Published!", "success");
             STATE.currentPage = 'seller-listings';
             updateUI();
         }
@@ -336,7 +363,7 @@
                 if(!confirm(`Spend ${cost} points on "${name}"?`)) return;
                 STATE.user.points -= cost;
                 updateUserStorage();
-                showMessage("Redeemed!", `You successfully claimed: ${name}`, false);
+                showToast(`Redeemed: ${name}`, "success");
             }
         }
 
@@ -349,20 +376,13 @@
             updateUI();
         }
 
-        // --- UPDATED SMART AI LOGIC ---
         window.runAiAnalysis = () => {
             STATE.aiAnalyzing = true;
             updateUI();
             
             setTimeout(() => {
                 STATE.aiAnalyzing = false;
-                
-                // Scan listings for keywords like "Today" or "Hour"
-                const riskyItems = STATE.listings.filter(l => 
-                    (l.expiry && l.expiry.toLowerCase().includes('today')) || 
-                    (l.expiry && l.expiry.toLowerCase().includes('hour'))
-                );
-
+                const riskyItems = STATE.listings.filter(l => (l.expiry && l.expiry.toLowerCase().includes('today')) || (l.expiry && l.expiry.toLowerCase().includes('hour')));
                 let reportTitle = "Inventory Healthy";
                 let reportMsg = "No items are at immediate risk of expiry.";
                 let isUrgent = false;
@@ -425,58 +445,38 @@
 
         function renderLogin() {
             return `
-            <div class="min-h-screen flex">
-                <div class="hidden md:block md:w-1/2 relative overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=2670&auto=format&fit=crop" class="w-full h-full object-cover animate-fade">
-                    <div class="absolute inset-0 bg-slate-900/40 flex items-center justify-center backdrop-blur-[2px]">
-                        <div class="text-white text-center p-12">
-                            <h2 class="text-5xl font-extrabold mb-6 tracking-tight">Rescue Food.<br>Save Earth.</h2>
-                            <p class="text-xl text-slate-200 font-light">Join Malaysia's fastest growing food rescue network.</p>
+            <div class="min-h-screen flex items-center justify-center p-4">
+                <div class="w-full max-w-md bg-card-bg p-8 rounded-3xl shadow-glass border border-border-subtle backdrop-blur-md relative z-10">
+                    <div class="mb-12">
+                        <h1 class="text-4xl font-extrabold text-text-main flex items-center gap-3">
+                            <i class="ph-fill ph-plant text-harvest-green"></i> SavePlate.
+                        </h1>
+                        <p class="text-text-muted mt-3 text-lg">Welcome back! Please login to continue.</p>
+                    </div>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-text-muted mb-2 uppercase tracking-wide">Username</label>
+                            <input id="username" type="text" placeholder="Enter your username" class="w-full natural-input p-4 rounded-xl text-lg placeholder-text-muted/50 outline-none">
                         </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-text-muted mb-2 uppercase tracking-wide">I am a...</label>
+                            <div class="relative">
+                                <select id="role" class="w-full natural-input p-4 rounded-xl text-lg appearance-none cursor-pointer outline-none">
+                                    <option value="buyer">Buyer (Food Rescuer)</option>
+                                    <option value="seller">Seller (Merchant)</option>
+                                </select>
+                                <i class="ph ph-caret-down absolute right-4 top-1/2 -translate-y-1/2 text-text-muted"></i>
+                            </div>
+                        </div>
+                        <button onclick="login()" class="w-full bg-harvest-green text-white font-bold py-4 rounded-xl shadow-lg hover:bg-harvest-hover transition transform hover:-translate-y-0.5 active:translate-y-0 text-lg">Login / Register</button>
+                    </div>
+                    <div class="mt-8 text-center">
+                        <button onclick="toggleTheme()" class="p-3 rounded-full bg-input hover:bg-main-bg shadow-natural text-text-main hover:scale-110 transition cursor-pointer border border-border-subtle z-50 relative">
+                            <i class="ph-fill ${STATE.theme === 'dark' ? 'ph-sun' : 'ph-moon'} text-xl"></i>
+                        </button>
                     </div>
                 </div>
-
-                <div class="w-full md:w-1/2 flex items-center justify-center bg-main-bg p-8 transition-colors duration-500">
-                    <div class="w-full max-w-md">
-                        <div class="mb-12">
-                            <h1 class="text-4xl font-extrabold text-text-main flex items-center gap-3">
-                                <i class="ph-fill ph-plant text-harvest-green"></i> SavePlate.
-                            </h1>
-                            <p class="text-text-muted mt-3 text-lg">Welcome back! Please login to continue.</p>
-                        </div>
-
-                        <div class="space-y-6">
-                            <div>
-                                <label class="block text-sm font-semibold text-text-muted mb-2 uppercase tracking-wide">Username</label>
-                                <input id="username" type="text" placeholder="Enter your username" 
-                                    class="w-full natural-input p-4 rounded-xl text-lg text-text-main placeholder-text-muted/50 outline-none">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-semibold text-text-muted mb-2 uppercase tracking-wide">I am a...</label>
-                                <div class="relative">
-                                    <select id="role" class="w-full natural-input p-4 rounded-xl text-lg text-text-main appearance-none cursor-pointer outline-none">
-                                        <option value="buyer">Buyer (Food Rescuer)</option>
-                                        <option value="seller">Seller (Merchant)</option>
-                                    </select>
-                                    <i class="ph ph-caret-down absolute right-4 top-1/2 -translate-y-1/2 text-text-muted"></i>
-                                </div>
-                            </div>
-
-                            <button onclick="login()" class="w-full bg-harvest-green text-white font-bold py-4 rounded-xl shadow-lg hover:bg-harvest-hover transition transform hover:-translate-y-0.5 active:translate-y-0 text-lg">
-                                Login / Register
-                            </button>
-                        </div>
-                        
-                        <div class="mt-8 text-center">
-                            <button class="p-3 rounded-full bg-card-bg shadow-natural text-text-main hover:scale-110 transition cursor-default">
-                                <i class="ph-fill ph-sun text-xl opacity-50"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            `;
+            </div>`;
         }
 
         function renderSellerAdd() {
@@ -486,69 +486,36 @@
                     <h2 class="text-3xl font-bold text-text-main">New Listing</h2>
                     <button onclick="handlePageChange('seller-listings')" class="text-text-muted hover:text-text-main font-medium">Cancel</button>
                 </div>
-                
                 <div class="natural-card p-8 rounded-3xl space-y-8">
                     <div class="space-y-3">
                         <label class="block text-sm font-bold text-text-muted uppercase tracking-wide">Food Photo</label>
                         <div class="relative w-full h-56 rounded-2xl upload-zone flex flex-col items-center justify-center cursor-pointer overflow-hidden group">
                             <input type="file" accept="image/*" onchange="handleImageUpload(this)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
-                            
                             <div id="upload-placeholder" class="text-center p-4 transition group-hover:scale-105">
-                                <div class="w-16 h-16 bg-harvest-green/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                                    <i class="ph ph-camera text-3xl text-harvest-green"></i>
-                                </div>
+                                <div class="w-16 h-16 bg-harvest-green/10 rounded-full flex items-center justify-center mx-auto mb-3"><i class="ph ph-camera text-3xl text-harvest-green"></i></div>
                                 <p class="text-text-main font-semibold">Click to upload photo</p>
                                 <p class="text-xs text-text-muted mt-1">JPG, PNG up to 2MB</p>
                             </div>
-                            
                             <img id="image-preview" class="absolute inset-0 w-full h-full object-cover hidden">
                         </div>
                     </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-2">
-                            <label class="text-sm font-semibold text-text-muted">Item Name</label>
-                            <input id="foodName" placeholder="e.g. Chicken Rice" class="w-full natural-input p-3 rounded-xl text-text-main">
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-sm font-semibold text-text-muted">Original Price (RM)</label>
-                            <input id="originalPrice" type="number" placeholder="0.00" class="w-full natural-input p-3 rounded-xl text-text-main">
-                        </div>
+                        <div class="space-y-2"><label class="text-sm font-semibold text-text-muted">Item Name</label><input id="foodName" placeholder="e.g. Chicken Rice" class="w-full natural-input p-3 rounded-xl"></div>
+                        <div class="space-y-2"><label class="text-sm font-semibold text-text-muted">Original Price (RM)</label><input id="originalPrice" type="number" placeholder="0.00" class="w-full natural-input p-3 rounded-xl"></div>
                     </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="space-y-2">
-                            <label class="text-sm font-semibold text-text-muted">Discount</label>
-                            <input id="discount" placeholder="e.g. 50%" class="w-full natural-input p-3 rounded-xl text-text-main">
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-sm font-semibold text-text-muted">Expiry Time</label>
-                            <input id="expiry" placeholder="e.g. 9:00 PM" class="w-full natural-input p-3 rounded-xl text-text-main">
-                        </div>
-                         <div class="space-y-2">
-                            <label class="text-sm font-semibold text-text-muted">Location</label>
-                            <input id="location" placeholder="Area" class="w-full natural-input p-3 rounded-xl text-text-main">
-                        </div>
+                        <div class="space-y-2"><label class="text-sm font-semibold text-text-muted">Discount</label><input id="discount" placeholder="e.g. 50%" class="w-full natural-input p-3 rounded-xl"></div>
+                        <div class="space-y-2"><label class="text-sm font-semibold text-text-muted">Expiry Time</label><input id="expiry" placeholder="e.g. 9:00 PM" class="w-full natural-input p-3 rounded-xl"></div>
+                         <div class="space-y-2"><label class="text-sm font-semibold text-text-muted">Location</label><input id="location" placeholder="Area" class="w-full natural-input p-3 rounded-xl"></div>
                     </div>
-
                     <button onclick="addListing()" class="w-full bg-harvest-green py-4 rounded-xl font-bold text-white shadow-lg hover:bg-harvest-hover transition transform active:scale-95">Post Listing</button>
                 </div>
             </div>`;
         }
 
         function renderHeader() {
-            const buyerLinks = [
-                { id: 'listings', label: 'Food', icon: 'ph-basket' },
-                { id: 'reservations', label: 'Orders', icon: 'ph-receipt' },
-                { id: 'rewards', label: 'Rewards', icon: 'ph-gift' },
-                { id: 'chat-inbox', label: 'Inbox', icon: 'ph-chat-circle-dots' }
-            ];
-            const sellerLinks = [
-                { id: 'seller-analytics', label: 'Analytics', icon: 'ph-chart-line-up' },
-                { id: 'seller-listings', label: 'Listings', icon: 'ph-list-dashes' },
-                { id: 'seller-add', label: 'Add', icon: 'ph-plus' },
-                { id: 'chat-inbox', label: 'Inbox', icon: 'ph-chat-circle-dots' }
-            ];
+            const buyerLinks = [{ id: 'listings', label: 'Food', icon: 'ph-basket' }, { id: 'reservations', label: 'Orders', icon: 'ph-receipt' }, { id: 'rewards', label: 'Rewards', icon: 'ph-gift' }, { id: 'chat-inbox', label: 'Inbox', icon: 'ph-chat-circle-dots' }];
+            const sellerLinks = [{ id: 'seller-analytics', label: 'Analytics', icon: 'ph-chart-line-up' }, { id: 'seller-listings', label: 'Listings', icon: 'ph-list-dashes' }, { id: 'seller-add', label: 'Add', icon: 'ph-plus' }, { id: 'chat-inbox', label: 'Inbox', icon: 'ph-chat-circle-dots' }];
             const links = STATE.user.role === 'buyer' ? buyerLinks : sellerLinks;
 
             return `
@@ -556,21 +523,12 @@
                     <div class="flex justify-between items-center max-w-7xl mx-auto py-3 px-6">
                         <div class="flex items-center gap-6">
                             <h1 class="text-2xl font-black tracking-tighter text-text-main cursor-pointer" onclick="handlePageChange('listings')">SavePlate<span class="text-harvest-green">.</span></h1>
-                            ${STATE.user.role === 'buyer' ? 
-                                `<div class="hidden md:flex items-center bg-harvest-green/10 px-4 py-1.5 rounded-full border border-harvest-green/20">
-                                    <i class="ph-fill ph-leaf text-harvest-green mr-2"></i>
-                                    <span class="text-sm font-bold text-harvest-green">${STATE.user.points || 0} Credits</span>
-                                </div>` : ''}
+                            ${STATE.user.role === 'buyer' ? `<div class="hidden md:flex items-center bg-harvest-green/10 px-4 py-1.5 rounded-full border border-harvest-green/20"><i class="ph-fill ph-leaf text-harvest-green mr-2"></i><span class="text-sm font-bold text-harvest-green">${STATE.user.points || 0} Credits</span></div>` : ''}
                         </div>
                         <nav class="flex items-center gap-1">
-                            ${links.map(l => `
-                                <button onclick="handlePageChange('${l.id}')" class="px-4 py-2 text-sm font-semibold rounded-lg flex items-center transition-all ${STATE.currentPage === l.id ? 'bg-text-main text-main-bg shadow-md' : 'text-text-muted hover:text-text-main hover:bg-card-bg'}">
-                                    <i class="ph-bold ${l.icon} text-lg md:mr-2"></i> <span class="hidden md:inline">${l.label}</span>
-                                </button>
-                            `).join('')}
-                            
+                            ${links.map(l => `<button onclick="handlePageChange('${l.id}')" class="px-4 py-2 text-sm font-semibold rounded-lg flex items-center transition-all ${STATE.currentPage === l.id ? 'bg-text-main text-main-bg shadow-md' : 'text-text-muted hover:text-text-main hover:bg-card-bg'}"><i class="ph-bold ${l.icon} text-lg md:mr-2"></i> <span class="hidden md:inline">${l.label}</span></button>`).join('')}
                             <div class="w-px h-6 bg-border-subtle mx-2"></div>
-                            
+                            <button onclick="toggleTheme()" class="p-2 rounded-full text-text-muted hover:text-text-main hover:bg-card-bg transition"><i class="ph-fill ${STATE.theme === 'dark' ? 'ph-sun' : 'ph-moon'} text-xl"></i></button>
                             <button onclick="logout()" class="ml-2 text-xs font-bold text-red-400 hover:text-red-500 transition px-2">Log Out</button>
                         </nav>
                     </div>
@@ -578,6 +536,7 @@
             `;
         }
 
+        // IMPROVEMENT 3: MAP BUTTON ADDED
         function renderListingsPage() {
              const filtered = STATE.listings.filter(l => l.foodName.toLowerCase().includes(STATE.searchQuery) || l.location.toLowerCase().includes(STATE.searchQuery));
              return `
@@ -585,7 +544,7 @@
                 <div class="mb-10 relative group">
                     <i class="ph-bold ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-text-muted text-xl group-focus-within:text-harvest-green transition-colors"></i>
                     <input id="search-input" type="text" placeholder="Search for food, location, or sellers..." 
-                        class="w-full natural-input py-4 pl-12 pr-6 rounded-2xl text-lg text-text-main placeholder-text-muted shadow-sm outline-none" 
+                        class="w-full natural-input py-4 pl-12 pr-6 rounded-2xl text-lg shadow-sm outline-none" 
                         oninput="setSearch(this.value)" value="${STATE.searchQuery}">
                 </div>
                 
@@ -616,7 +575,13 @@
                                             <span class="text-sm line-through text-text-muted decoration-2">RM ${l.originalPrice}</span>
                                         </div>
                                     </div>
-                                    <button onclick="reserveFood('${l.id}')" class="px-6 py-2.5 bg-text-main text-main-bg font-bold rounded-xl hover:opacity-90 transition shadow-lg">Buy</button>
+                                    <div class="flex gap-2">
+                                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.location)}" target="_blank" 
+                                           class="px-3 py-2.5 bg-card-bg border border-border-subtle text-text-muted rounded-xl hover:text-white hover:border-white/20 transition flex items-center justify-center">
+                                           <i class="ph-bold ph-map-trifold text-xl"></i>
+                                        </a>
+                                        <button onclick="reserveFood('${l.id}')" class="px-6 py-2.5 bg-text-main text-main-bg font-bold rounded-xl hover:opacity-90 transition shadow-lg">Buy</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>`
@@ -666,11 +631,7 @@
                         </div>
                         <h3 class="font-bold text-xl mb-2 text-text-main">${r.name}</h3>
                         <p class="text-text-muted text-sm mb-8 font-medium">Requires <span class="text-text-main font-bold">${r.cost} pts</span></p>
-                        <button onclick="redeemReward(${r.cost}, '${r.name}')" 
-                            class="w-full py-3 rounded-xl font-bold transition-all shadow-md ${STATE.user.points >= r.cost ? 'bg-harvest-green text-white hover:bg-harvest-hover' : 'bg-gray-200 dark:bg-slate-700 text-gray-400 cursor-not-allowed'}" 
-                            ${STATE.user.points < r.cost ? 'disabled' : ''}>
-                            ${STATE.user.points >= r.cost ? 'Redeem Reward' : 'Insufficient Points'}
-                        </button>
+                        <button onclick="redeemReward(${r.cost}, '${r.name}')" class="w-full py-3 rounded-xl font-bold transition-all shadow-md ${STATE.user.points >= r.cost ? 'bg-harvest-green text-white hover:bg-harvest-hover' : 'bg-gray-200 dark:bg-slate-700 text-gray-400 cursor-not-allowed'}" ${STATE.user.points < r.cost ? 'disabled' : ''}>${STATE.user.points >= r.cost ? 'Redeem Reward' : 'Insufficient Points'}</button>
                     </div>`).join('')}
                 </div>
             </div>`;
@@ -678,6 +639,7 @@
 
         function renderInboxPage() {
             let conversations = STATE.user.role === 'buyer' ? STATE.reservations.filter(r => r.buyerUsername === STATE.user.username) : STATE.reservations.filter(r => r.sellerId === (STATE.user.sellerId || 'seller_a'));
+            
             return `
             <div class="max-w-3xl mx-auto p-6 pt-24">
                 <h2 class="text-3xl font-bold text-text-main mb-8 flex items-center gap-3">
@@ -689,14 +651,23 @@
                         const msgs = STATE.chatMessages.filter(m => m.transactionId === r.id);
                         const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1] : { text: "No messages yet.", user: "System", timestamp: r.timestamp };
                         const isUnread = lastMsg.user !== STATE.user.username && lastMsg.role !== 'system';
+                        
+                        // --- HOVER LOGIC ("Follow Pointer") ---
+                        // 'group' allows us to style children when the parent is hovered
+                        // 'hover:border-l-sky-500' creates the blue bar on hover
+                        // 'hover:-translate-y-1' makes it lift up
+                        const hoverClasses = "hover:border-l-sky-500 hover:bg-sky-500/10 hover:shadow-lg hover:-translate-y-1";
+                        const baseClasses = "natural-card p-5 rounded-2xl flex justify-between items-center cursor-pointer border-l-[6px] transition-all duration-300 ease-out group";
+                        const activeClasses = isUnread ? "border-l-sky-500 bg-sky-500/5" : "border-l-transparent";
+
                         return `
-                        <div onclick="openChatPopup('${r.id}', '${r.foodName}')" class="natural-card p-5 rounded-2xl flex justify-between items-center cursor-pointer border-l-[6px] transition hover:bg-main-bg/50 ${isUnread ? 'border-l-sky-500 bg-sky-500/5' : 'border-l-transparent'}">
+                        <div onclick="openChatPopup('${r.id}', '${r.foodName}')" class="${baseClasses} ${activeClasses} ${hoverClasses}">
                             <div class="flex items-center space-x-5">
-                                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center text-xl shadow-inner text-text-main">
+                                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center text-xl shadow-inner text-text-main group-hover:scale-110 transition-transform duration-300">
                                     ${STATE.user.role === 'buyer' ? '<i class="ph-fill ph-storefront"></i>' : '<i class="ph-fill ph-user"></i>'}
                                 </div>
                                 <div>
-                                    <h4 class="font-bold text-text-main text-lg">${r.foodName}</h4>
+                                    <h4 class="font-bold text-text-main text-lg group-hover:text-sky-500 transition-colors">${r.foodName}</h4>
                                     <p class="text-sm text-text-muted font-medium mt-0.5">
                                         <span class="${isUnread ? 'text-text-main font-bold' : ''}">
                                             ${lastMsg.role === 'system' ? '<i class="ph-bold ph-info text-sky-500"></i>' : ''} 
@@ -706,8 +677,8 @@
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="text-xs text-text-muted font-bold mb-1">${new Date(lastMsg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-                                ${isUnread ? '<span class="bg-sky-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">New</span>' : ''}
+                                <p class="text-xs text-text-muted font-bold mb-1 group-hover:text-sky-500 transition-colors">${new Date(lastMsg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                                ${isUnread ? '<span class="bg-sky-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide shadow-sm animate-pulse">New</span>' : ''}
                             </div>
                         </div>`;
                     }).join('') : `<div class="text-center p-16 natural-card rounded-3xl"><i class="ph-duotone ph-chats-circle text-6xl text-text-muted mb-4 opacity-50"></i><p class="text-text-muted">No active conversations found.</p></div>`}
@@ -720,30 +691,18 @@
             return `
             <div class="bg-card-bg rounded-2xl shadow-2xl overflow-hidden h-[600px] flex flex-col border border-border-subtle">
                 <div class="p-5 bg-card-bg border-b border-border-subtle flex justify-between items-center shadow-sm z-10">
-                    <div>
-                        <h3 class="font-bold text-text-main text-lg">${STATE.currentChatName}</h3>
-                        <div class="flex items-center gap-1.5"><div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div><span class="text-xs text-text-muted">Online</span></div>
-                    </div>
+                    <div><h3 class="font-bold text-text-main text-lg">${STATE.currentChatName}</h3><div class="flex items-center gap-1.5"><div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div><span class="text-xs text-text-muted">Online</span></div></div>
                     <button onclick="closeModal()" class="p-2 hover:bg-main-bg rounded-full text-text-muted hover:text-text-main transition"><i class="ph-bold ph-x text-xl"></i></button>
                 </div>
                 <div id="chat-container" class="flex-grow p-6 overflow-y-auto bg-main-bg space-y-4">
                     ${msgs.map(m => {
-                        const isMe = m.user === STATE.user.username;
-                        const isSystem = m.role === 'system';
+                        const isMe = m.user === STATE.user.username; const isSystem = m.role === 'system';
                         if (isSystem) return `<div class="flex justify-center"><div class="text-xs font-bold text-text-muted bg-card-bg px-3 py-1 rounded-full border border-border-subtle shadow-sm">${m.text}</div></div>`;
-                        return `
-                        <div class="flex ${isMe ? 'justify-end' : 'justify-start'} chat-anim">
-                            <div class="max-w-[75%]">
-                                <div class="px-5 py-3 rounded-2xl text-sm shadow-sm ${isMe ? 'bg-sky-600 text-white rounded-tr-none' : 'bg-card-bg text-text-main border border-border-subtle rounded-tl-none'}">
-                                    ${m.text}
-                                </div>
-                                <div class="text-[10px] text-text-muted mt-1 font-medium ${isMe ? 'text-right' : 'text-left'}">${new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
-                            </div>
-                        </div>`;
+                        return `<div class="flex ${isMe ? 'justify-end' : 'justify-start'} chat-anim"><div class="max-w-[75%]"><div class="px-5 py-3 rounded-2xl text-sm shadow-sm ${isMe ? 'bg-sky-600 text-white rounded-tr-none' : 'bg-card-bg text-text-main border border-border-subtle rounded-tl-none'}">${m.text}</div><div class="text-[10px] text-text-muted mt-1 font-medium ${isMe ? 'text-right' : 'text-left'}">${new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div></div></div>`;
                     }).join('')}
                 </div>
                 <div class="p-4 bg-card-bg border-t border-border-subtle flex items-center gap-3">
-                    <input id="chatMessage" type="text" placeholder="Type a message..." class="flex-grow natural-input py-3 px-4 rounded-xl text-text-main outline-none" onkeypress="if(event.key==='Enter') sendChat()">
+                    <input id="chatMessage" type="text" placeholder="Type a message..." class="flex-grow natural-input py-3 px-4 rounded-xl outline-none" onkeypress="if(event.key==='Enter') sendChat()">
                     <button onclick="sendChat()" class="p-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl shadow-lg transition transform active:scale-95"><i class="ph-bold ph-paper-plane-right text-xl"></i></button>
                 </div>
             </div>`;
@@ -755,32 +714,13 @@
             <div class="max-w-5xl mx-auto p-6 pt-24">
                 <h2 class="text-3xl font-bold mb-8 text-text-main">Dashboard</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="natural-card p-6 rounded-3xl relative overflow-hidden">
-                        <div class="absolute right-0 top-0 p-6 opacity-5"><i class="ph-fill ph-coins text-8xl text-harvest-green"></i></div>
-                        <p class="text-text-muted font-bold text-sm uppercase tracking-wider mb-2">Total Revenue</p>
-                        <p class="text-4xl font-black text-text-main">RM ${totalRev}</p>
-                        <div class="mt-4 text-xs font-bold text-harvest-green flex items-center"><i class="ph-bold ph-trend-up mr-1"></i> +12% this week</div>
-                    </div>
-                    <div class="natural-card p-6 rounded-3xl relative overflow-hidden">
-                        <div class="absolute right-0 top-0 p-6 opacity-5"><i class="ph-fill ph-package text-8xl text-sky-500"></i></div>
-                        <p class="text-text-muted font-bold text-sm uppercase tracking-wider mb-2">Items Sold</p>
-                        <p class="text-4xl font-black text-text-main">${STATE.reservations.length}</p>
-                    </div>
-                    <div class="natural-card p-6 rounded-3xl relative overflow-hidden">
-                        <div class="absolute right-0 top-0 p-6 opacity-5"><i class="ph-fill ph-chart-pie-slice text-8xl text-orange-500"></i></div>
-                        <p class="text-text-muted font-bold text-sm uppercase tracking-wider mb-2">Platform Fees</p>
-                        <p class="text-4xl font-black text-text-main">RM ${(totalRev*0.05).toFixed(2)}</p>
-                    </div>
+                    <div class="natural-card p-6 rounded-3xl relative overflow-hidden"><div class="absolute right-0 top-0 p-6 opacity-5"><i class="ph-fill ph-coins text-8xl text-harvest-green"></i></div><p class="text-text-muted font-bold text-sm uppercase tracking-wider mb-2">Total Revenue</p><p class="text-4xl font-black text-text-main">RM ${totalRev}</p><div class="mt-4 text-xs font-bold text-harvest-green flex items-center"><i class="ph-bold ph-trend-up mr-1"></i> +12% this week</div></div>
+                    <div class="natural-card p-6 rounded-3xl relative overflow-hidden"><div class="absolute right-0 top-0 p-6 opacity-5"><i class="ph-fill ph-package text-8xl text-sky-500"></i></div><p class="text-text-muted font-bold text-sm uppercase tracking-wider mb-2">Items Sold</p><p class="text-4xl font-black text-text-main">${STATE.reservations.length}</p></div>
+                    <div class="natural-card p-6 rounded-3xl relative overflow-hidden"><div class="absolute right-0 top-0 p-6 opacity-5"><i class="ph-fill ph-chart-pie-slice text-8xl text-orange-500"></i></div><p class="text-text-muted font-bold text-sm uppercase tracking-wider mb-2">Platform Fees</p><p class="text-4xl font-black text-text-main">RM ${(totalRev*0.05).toFixed(2)}</p></div>
                 </div>
-                
                 <div class="bg-gradient-to-r from-violet-600 to-indigo-600 p-8 rounded-3xl shadow-xl text-white flex justify-between items-center relative overflow-hidden">
-                    <div class="relative z-10">
-                        <h3 class="text-2xl font-bold flex items-center mb-2"><i class="ph-fill ph-brain text-violet-200 mr-3"></i> SmartStock AI</h3>
-                        <p class="text-violet-100 max-w-lg">Our AI analyzes your sales velocity to predict expiry risks before they happen.</p>
-                    </div>
-                    <button onclick="runAiAnalysis()" class="relative z-10 px-6 py-3 bg-white text-violet-700 font-bold rounded-xl shadow-lg hover:bg-violet-50 transition flex items-center gap-2">
-                        ${STATE.aiAnalyzing ? '<i class="ph-bold ph-spinner animate-spin"></i> Processing' : '<i class="ph-bold ph-lightning"></i> Analyze Inventory'}
-                    </button>
+                    <div class="relative z-10"><h3 class="text-2xl font-bold flex items-center mb-2"><i class="ph-fill ph-brain text-violet-200 mr-3"></i> SmartStock AI</h3><p class="text-violet-100 max-w-lg">Our AI analyzes your sales velocity to predict expiry risks before they happen.</p></div>
+                    <button onclick="runAiAnalysis()" class="relative z-10 px-6 py-3 bg-white text-violet-700 font-bold rounded-xl shadow-lg hover:bg-violet-50 transition flex items-center gap-2">${STATE.aiAnalyzing ? '<i class="ph-bold ph-spinner animate-spin"></i> Processing' : '<i class="ph-bold ph-lightning"></i> Analyze Inventory'}</button>
                     <i class="ph-duotone ph-circuitry absolute -left-10 -bottom-20 text-9xl opacity-20 rotate-45"></i>
                 </div>
             </div>`;
@@ -789,21 +729,11 @@
         function renderSellerListings() {
             return `
             <div class="max-w-4xl mx-auto p-6 pt-24">
-                <div class="flex justify-between items-center mb-8">
-                    <h2 class="text-3xl font-bold text-text-main">Your Listings</h2>
-                    <button onclick="handlePageChange('seller-add')" class="px-5 py-2 bg-text-main text-main-bg font-bold rounded-xl text-sm">+ New Item</button>
-                </div>
+                <div class="flex justify-between items-center mb-8"><h2 class="text-3xl font-bold text-text-main">Your Listings</h2><button onclick="handlePageChange('seller-add')" class="px-5 py-2 bg-text-main text-main-bg font-bold rounded-xl text-sm">+ New Item</button></div>
                 <div class="space-y-4">
                     ${STATE.listings.map(l=>`
                     <div class="natural-card p-5 rounded-2xl flex justify-between items-center group hover:border-text-muted/30 transition">
-                        <div class="flex items-center gap-4">
-                            <img src="${l.image}" class="w-16 h-16 rounded-xl object-cover">
-                            <div>
-                                <span class="block font-bold text-text-main text-lg">${l.foodName}</span>
-                                <span class="text-sm text-text-muted font-medium bg-main-bg px-2 py-0.5 rounded-lg border border-border-subtle">${l.tag || 'Active'}</span>
-                                <span class="text-sm text-harvest-green font-bold ml-2">${l.discount} OFF</span>
-                            </div>
-                        </div>
+                        <div class="flex items-center gap-4"><img src="${l.image}" class="w-16 h-16 rounded-xl object-cover"><div><span class="block font-bold text-text-main text-lg">${l.foodName}</span><span class="text-sm text-text-muted font-medium bg-main-bg px-2 py-0.5 rounded-lg border border-border-subtle">${l.tag || 'Active'}</span><span class="text-sm text-harvest-green font-bold ml-2">${l.discount} OFF</span></div></div>
                         <button class="w-10 h-10 rounded-full hover:bg-main-bg flex items-center justify-center text-text-muted hover:text-red-500 transition"><i class="ph-bold ph-trash"></i></button>
                     </div>`).join('')}
                 </div>
