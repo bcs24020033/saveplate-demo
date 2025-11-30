@@ -443,37 +443,65 @@
 
         // --- RENDERERS ---
 
-        function renderLogin() {
+       function renderLogin() {
             return `
-            <div class="min-h-screen flex items-center justify-center p-4">
-                <div class="w-full max-w-md bg-card-bg p-8 rounded-3xl shadow-glass border border-border-subtle backdrop-blur-md relative z-10">
-                    <div class="mb-12">
-                        <h1 class="text-4xl font-extrabold text-text-main flex items-center gap-3">
-                            <i class="ph-fill ph-plant text-harvest-green"></i> SavePlate.
-                        </h1>
-                        <p class="text-text-muted mt-3 text-lg">Welcome back! Please login to continue.</p>
-                    </div>
-                    <div class="space-y-6">
-                        <div>
-                            <label class="block text-sm font-semibold text-text-muted mb-2 uppercase tracking-wide">Username</label>
-                            <input id="username" type="text" placeholder="Enter your username" class="w-full natural-input p-4 rounded-xl text-lg placeholder-text-muted/50 outline-none">
+            <div class="min-h-screen flex">
+                <div class="hidden md:block md:w-1/2 relative overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=2670&auto=format&fit=crop" 
+                         class="w-full h-full object-cover animate-fade">
+                    
+                    <div class="absolute inset-0 bg-slate-900/40 flex items-center justify-center backdrop-blur-[2px]">
+                        <div class="text-white text-center p-12">
+                            <h2 class="text-5xl font-extrabold mb-6 tracking-tight leading-tight">Rescue Food.<br>Save Earth.</h2>
+                            <p class="text-xl text-slate-200 font-light">Join Malaysia's fastest growing food rescue network.</p>
                         </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-text-muted mb-2 uppercase tracking-wide">I am a...</label>
-                            <div class="relative">
-                                <select id="role" class="w-full natural-input p-4 rounded-xl text-lg appearance-none cursor-pointer outline-none">
-                                    <option value="buyer">Buyer (Food Rescuer)</option>
-                                    <option value="seller">Seller (Merchant)</option>
-                                </select>
-                                <i class="ph ph-caret-down absolute right-4 top-1/2 -translate-y-1/2 text-text-muted"></i>
-                            </div>
-                        </div>
-                        <button onclick="login()" class="w-full bg-harvest-green text-white font-bold py-4 rounded-xl shadow-lg hover:bg-harvest-hover transition transform hover:-translate-y-0.5 active:translate-y-0 text-lg">Login / Register</button>
                     </div>
-                    <div class="mt-8 text-center">
-                        <button onclick="toggleTheme()" class="p-3 rounded-full bg-input hover:bg-main-bg shadow-natural text-text-main hover:scale-110 transition cursor-pointer border border-border-subtle z-50 relative">
+                </div>
+
+                <div class="w-full md:w-1/2 flex items-center justify-center bg-main-bg p-8 transition-colors duration-500 relative">
+                    
+                    <div class="absolute top-6 right-6">
+                         <button onclick="toggleTheme()" class="p-3 rounded-full hover:bg-card-bg text-text-muted hover:text-text-main transition">
                             <i class="ph-fill ${STATE.theme === 'dark' ? 'ph-sun' : 'ph-moon'} text-xl"></i>
                         </button>
+                    </div>
+
+                    <div class="w-full max-w-md">
+                        <div class="mb-12">
+                            <h1 class="text-4xl font-extrabold text-text-main flex items-center gap-3">
+                                <i class="ph-fill ph-plant text-harvest-green"></i> SavePlate.
+                            </h1>
+                            <p class="text-text-muted mt-3 text-lg">Welcome back! Please login to continue.</p>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-text-muted mb-2 uppercase tracking-wide">Username</label>
+                                <input id="username" type="text" placeholder="Enter your username" 
+                                    class="w-full natural-input p-4 rounded-xl text-lg placeholder-text-muted/50 outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-text-muted mb-2 uppercase tracking-wide">I am a...</label>
+                                <div class="relative">
+                                    <select id="role" class="w-full natural-input p-4 rounded-xl text-lg appearance-none cursor-pointer outline-none">
+                                        <option value="buyer">Buyer (Food Rescuer)</option>
+                                        <option value="seller">Seller (Merchant)</option>
+                                    </select>
+                                    <i class="ph ph-caret-down absolute right-4 top-1/2 -translate-y-1/2 text-text-muted"></i>
+                                </div>
+                            </div>
+
+                            <button onclick="login()" class="w-full bg-harvest-green text-white font-bold py-4 rounded-xl shadow-lg hover:bg-harvest-hover transition transform hover:-translate-y-0.5 active:translate-y-0 text-lg">
+                                Login / Register
+                            </button>
+                        </div>
+                        
+                        <div class="mt-8 text-center text-sm text-text-muted">
+                            <button onclick="toggleTheme()" class="mt-4 p-3 rounded-full bg-input-bg hover:bg-card-bg transition text-text-main">
+                                <i class="ph-fill ph-sun"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>`;
